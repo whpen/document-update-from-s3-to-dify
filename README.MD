@@ -6,9 +6,8 @@ This tool is an AWS Lambda function designed to synchronize files from a specifi
 
 Before you begin, ensure you have the following:
 
-- AWS CLI configured with the appropriate permissions.
-- Node.js (version 18.x) installed.
-- Access to the Dify backend and its VPC.
+- The shared AWS S3 bucket is created
+- IAM user for the shared AWS S3 bucket is created
 
 ## Instructions
 
@@ -55,6 +54,10 @@ DIFY_ENDPOINT=your-dify-endpoint
 ```
 
 Ensure these variables are correctly set in your Lambda function's configuration.
+
+### 7. Create S3 Event Notification
+
+Create a Event notification for the shared S3 bucket, set 'Put' and 'Permanently deleted' as the event types,and set the lambda function as the destination.
 
 ## Additional Notes
 
