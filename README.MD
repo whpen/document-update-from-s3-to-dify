@@ -22,6 +22,7 @@ npm install
 ### 2. Create Deployment Package
 
 Create a ZIP file containing your `lambda_function.js` and the `node_modules` folder. This ZIP file will be used to deploy the Lambda function.
+Use the command " zip -r function.zip . " 
 
 ### 3. Create AWS Lambda Function
 
