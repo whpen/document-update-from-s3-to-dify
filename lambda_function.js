@@ -6,6 +6,7 @@ const bucketName = process.env.AWS_S3_BUCKET;
 
 exports.lambda_handler = async (event, context) => {
     console.log('Starting S3 sync process');
+    console.log('Event:', JSON.stringify(event, null, 2));
   
     try {
       // Log environment variables (for debugging)
@@ -56,6 +57,13 @@ exports.lambda_handler = async (event, context) => {
       return { statusCode: 200, body: JSON.stringify('Sync completed successfully!') };
     } catch (error) {
       console.error('Error during sync:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.status, JSON.stringify(error.response.data, null, 2));
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       return { statusCode: 500, body: JSON.stringify(`Error during sync: ${error.message}`) };
     }
 };
@@ -70,9 +78,8 @@ async function processCreatedObject(objectKey, existingDoc, datasetId) {
     const file = await s3.getObject({ Bucket: bucketName, Key: objectKey }).promise();
     
     console.log('File downloaded. Uploading to Dify.');
-    const fileBlob = new Blob([file.Body]);
     const formData = new FormData();
-    formData.append('file', fileBlob, objectKey);
+    formData.append('file', new Blob([file.Body]), objectKey);
     console.log('Filename being sent to Dify:', objectKey);
     const dataJson = JSON.stringify({
       indexing_technique: 'high_quality',
