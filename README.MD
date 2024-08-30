@@ -41,6 +41,7 @@ Ensure the following configurations are set for your Lambda function:
 
 - **Handler:** `lambda_function.handler`
 - **Execution Role:** Ensure your Lambda function has the necessary permissions to process the S3 bucket. In the execution role, add the relevant policy to allow S3 access.
+- **Timeout:** Choose the "Configuration" tab,Click on "General configuration"and Click "Edit" and adjust the "Timeout" value from 3s to a higher number (e.g. 30s)
 
 ### 6. Set Environment Variables
 
