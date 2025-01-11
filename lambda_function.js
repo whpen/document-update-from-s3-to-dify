@@ -82,9 +82,32 @@ async function processCreatedObject(objectKey, existingDoc, datasetId) {
     formData.append('file', new Blob([file.Body]), objectKey);
     console.log('Filename being sent to Dify:', objectKey);
     const dataJson = JSON.stringify({
+      name: objectKey,
       indexing_technique: 'high_quality',
       process_rule: {
-        mode: 'automatic'
+        mode: 'automatic',
+        rules: {
+          // pre_processing_rules: [
+          //   {
+          //     id: 'remove_extra_spaces',
+          //     enabled: true
+          //   },
+          //   {
+          //     id: 'remove_urls_emails',
+          //     enabled: true
+          //   }
+          // ],
+          // segmentation: {
+          //   separator: '\n',
+          //   max_tokens: 1000
+          // },
+          parent_mode: 'paragraph',
+          subchunk_segmentation: {
+            separator: '***',
+            max_tokens: 500,
+            // chunk_overlap: 50
+          }
+        }
       }
     });
     formData.append('data', dataJson);
