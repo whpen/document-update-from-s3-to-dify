@@ -4,6 +4,11 @@ const axios = require('axios');
 const s3 = new AWS.S3();
 const bucketName = process.env.AWS_S3_BUCKET;
 
+// Helper function to sanitize filenames by replacing '/' with '_'
+function sanitizeFilename(filename) {
+  return filename.replace(/\//g, "_");
+}
+
 exports.lambda_handler = async (event, context) => {
     console.log('Starting S3 sync process');
     console.log('Event:', JSON.stringify(event, null, 2));
@@ -38,7 +43,12 @@ exports.lambda_handler = async (event, context) => {
         console.log('Decoded key:', objectKey);
 
         try {
-          const existingDoc = existingDocs.find(d => d.name === objectKey);
+          // Sanitize the object key for comparison with existing documents
+          const sanitizedKey = sanitizeFilename(objectKey);
+          console.log('Original key:', objectKey, 'Sanitized key:', sanitizedKey);
+          
+          // Look for existing document with either the original key or sanitized key
+          const existingDoc = existingDocs.find(d => d.name === objectKey || d.name === sanitizedKey);
 
           if (eventName.startsWith('ObjectCreated')) {
             await processCreatedObject(objectKey, existingDoc, datasetId);
@@ -77,12 +87,16 @@ async function processCreatedObject(objectKey, existingDoc, datasetId) {
   try {
     const file = await s3.getObject({ Bucket: bucketName, Key: objectKey }).promise();
     
+    // Sanitize the filename for Dify API
+    const sanitizedKey = sanitizeFilename(objectKey);
+    
     console.log('File downloaded. Uploading to Dify.');
     const formData = new FormData();
-    formData.append('file', new Blob([file.Body]), objectKey);
-    console.log('Filename being sent to Dify:', objectKey);
+    formData.append('file', new Blob([file.Body]), sanitizedKey);
+    console.log('Original filename:', objectKey);
+    console.log('Sanitized filename being sent to Dify:', sanitizedKey);
     const dataJson = JSON.stringify({
-      name: objectKey,
+      name: sanitizedKey,
       indexing_technique: 'high_quality',
       process_rule: {
         mode: 'automatic',
@@ -146,6 +160,11 @@ async function processCreatedObject(objectKey, existingDoc, datasetId) {
 }
 
 async function processRemovedObject(objectKey, existingDoc, datasetId) {
+  // Sanitize the filename for Dify API
+  const sanitizedKey = sanitizeFilename(objectKey);
+  console.log('Original key for deletion:', objectKey);
+  console.log('Sanitized key for deletion:', sanitizedKey);
+  
   if (existingDoc) {
     console.log('Deleting document:', existingDoc.id);
     try {
@@ -163,7 +182,7 @@ async function processRemovedObject(objectKey, existingDoc, datasetId) {
       }
     }
   } else {
-    console.log(`Document for ${objectKey} not found in Dify, no deletion needed`);
+    console.log(`Document for ${objectKey} (sanitized: ${sanitizedKey}) not found in Dify, no deletion needed`);
   }
 }
 
